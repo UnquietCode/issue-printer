@@ -1,0 +1,6 @@
+{
+    "name": "Issue Printer- Backfill Issues",
+    "description": "Backfills the existing issues in a repository.",
+    "iconName": "octicon smiley",
+    "categories": ["Automation", "SDLC"]
+}

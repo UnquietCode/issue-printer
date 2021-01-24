@@ -1,0 +1,6 @@
+{
+    "name": "Issue Printer- Print Issues",
+    "description": "render PDF's for created and updated issues in the repository",
+    "iconName": "octicon smiley",
+    "categories": ["Automation", "SDLC"]
+}

@@ -1,0 +1,21 @@
+name: dot github sync
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  trigger-workflow-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - id: workflow-dispatch
+        name: trigger workflow
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: "submodules-sync",
+              ref: "main",
+            })

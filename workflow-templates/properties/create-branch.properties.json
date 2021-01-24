@@ -1,0 +1,6 @@
+{
+    "name": "Issue Printer- Create Branch",
+    "description": "create a new branch suitable for storing issue PDF's,
+    "iconName": "octicon smiley",
+    "categories": ["Automation", "SDLC"]
+}
