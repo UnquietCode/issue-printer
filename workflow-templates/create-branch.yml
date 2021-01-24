@@ -11,36 +11,8 @@ jobs:
   create-branch:
     runs-on: ubuntu-latest
     steps:
-
-      - id: read-readme
-        name: read in the readme file
-        run: echo "::set-output name=readme-contents::$(cat ./readme.file.md)"
-
-      - id: create-tree
-        name: create a bare tree
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.git.createTree({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tree: [{
-                 path: 'README.md',
-                 mode': '100644',
-                 type': 'blob',
-                 content': "${{ steps.read-readme.outputs.readme-contents }}",              
-              }]
-            })
       - id: create-branch
         name: create a bare branch
-        uses: actions/github-script@v3
+        uses: unquietcode/actions/create-bare-branch@master
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/heads/${{ github.event.inputs.name }}',
-              sha: '${{ steps.create-tree.outputs.result.sha }}',
-            })
+          name: "${{ github.event.inputs.name }}"
