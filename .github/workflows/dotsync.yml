@@ -11,11 +11,11 @@ jobs:
         name: trigger workflow
         uses: actions/github-script@v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: "${{ secrets.DOT_GITHUB_TOKEN }}"
           script: |
             github.actions.createWorkflowDispatch({
               owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: "submodules-sync",
+              repo: ".github",
+              workflow_id: "submodules-sync.yml",
               ref: "main",
             })
