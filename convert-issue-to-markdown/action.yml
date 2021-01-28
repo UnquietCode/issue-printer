@@ -1,1 +1,16 @@
+name: Convert Issue to Markdown
+description: |
+  Takes the JSON of a GitHub issue and renders it
+  as a single markdown document.
+inputs:
+  issue:
+    description: JSON issue data
+    required: true
 
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+
+branding:
+  icon: git-commit
+  color: gray-dark
