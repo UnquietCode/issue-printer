@@ -3,13 +3,23 @@ description: |
   Takes the JSON of a GitHub issue and renders it
   as a single markdown document.
 inputs:
-  issue:
-    description: JSON issue data
-    required: true
+  content:
+    description: stringified issue JSON
+    required: false
+  content64:
+    description: Base64 encoded issue JSON
+    required: false
+  contentURL:
+    description: a public URL where the issue can be retrieved
+    required: false
 
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: docker
+  image: './Dockerfile'
+  args:
+    - "${{ inputs.content }}"
+    - "${{ inputs.content64 }}"
+    - "${{ inputs.contentURL }}"
 
 branding:
   icon: git-commit

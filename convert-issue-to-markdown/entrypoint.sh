@@ -3,6 +3,7 @@ set -x
 
 CONTENT=$1
 CONTENT_64=$2
+CONTENT_URL=$3
 
 INPUT_JSON=$(mktemp)
 
@@ -10,9 +11,11 @@ if [ -z "$CONTENT" ]; then
   echo "$CONTENT" > "$INPUT_JSON"
 elif [ -z "$CONTENT_64" ]; then
   echo "$CONTENT_64" | base64 -d > "$INPUT_JSON"
+elif [ -z "$CONTENT_URL" ]; then
+  curl "$CONTENT_URL" -o "$INPUT_JSON"
 else
-  echo "either content or encoded content must be provided"
-  echo "usage: (content) (content base 64)"
+  echo "either content, encoded content, or content URL must be provided"
+  echo "usage: (content) (content base 64) (content URL)"
   exit(1)
 fi
 
