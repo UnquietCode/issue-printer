@@ -1,0 +1,22 @@
+name: Issue Printer - Create Branch
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'name of the branch to create'
+        required: true
+        default: 'issues'
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - id: create-branch
+        name: create a bare branch
+        uses: unquietcode/actions/create-bare-branch@master
+        with:
+          name: "${{ github.event.inputs.name }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          readme: |
+            # Issue Printer ([UnquietCode/issue-printer](https://github.com/UnquietCode/issue-printer))
+            Workflow automation to render and store issues as PDF's in the same repository.
