@@ -1,11 +1,7 @@
-FROM ubuntu:bionic
+FROM unquietcode/issue-printer
 
 # create source folder
-RUN mkdir /app
-WORKDIR /app
-
-# install source code
-ADD run.py .
+WORKDIR /
 ADD entrypoint.sh .
 
 ENTRYPOINT ["./entrypoint.sh"]

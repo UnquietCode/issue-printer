@@ -16,10 +16,10 @@ elif [ -z "$CONTENT_URL" ]; then
 else
   echo "either content, encoded content, or content URL must be provided"
   echo "usage: (content) (content base 64) (content URL)"
-  exit(1)
+  exit 1
 fi
 
-OUTPUT_MARKDOWN=$(mktemp)
-python3 /app/run.py "$INPUT_JSON" "$OUTPUT_MARKDOWN"
+$OUTPUT_ZIP=$(mktemp)
+python3 /app/run.py "$INPUT_JSON" "$OUTPUT_ZIP"
 
-echo "::set-output name=markdown::$(base64 "$OUTPUT_MARKDOWN")"
+echo "::set-output name=zip_data::$(base64 "$OUTPUT_ZIP")"
