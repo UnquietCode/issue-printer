@@ -1,1 +1,20 @@
+name: Issue Printer - Backfill Issues
+on:
+  workfloW_dispatch
 
+jobs:
+  convert-issue:
+    runs-on: ubuntu-latest
+    steps:
+
+      - id: convert-to-markdown
+        name: convert the issue JSON to markdown
+        uses: UnquietCode/issue-printer/convert-issue-to-markdown@workflow
+        with:
+          issue: "${{ github.event }}"
+
+      - id: convert-to-pdf
+        name: convert the issue markdown to PDF
+        uses: UnquietCode/martek/create-pdf@master
+        with:
+          content: "${{ steps.convert-to-markdown.outputs.markdown }}"    
