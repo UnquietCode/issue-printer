@@ -1,5 +1,4 @@
 import json
-import io
 import sys
 import re
 import os
@@ -10,9 +9,13 @@ import urllib.request
 from datetime import datetime
 from tempfile import TemporaryDirectory
 
-GH_TOKEN = os.environ['github-token']
+GH_TOKEN = os.environ['GITHUB_TOKEN']
 standard_headers = {'User-Agent': 'github-issues-printer/1.0',
-                    'Authorization': 'bearer {0}'.format(GH_TOKEN)}
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Authorization': 'Bearer {0}'.format(GH_TOKEN)}
+
+def make_request(url):
+    return urllib.request.Request(url, method='GET', headers=standard_headers)
 
 
 def replace_image(match, tmp_dir):
@@ -33,8 +36,8 @@ def replace_image(match, tmp_dir):
     image_path = os.path.join(tmp_dir, image_filename)
     
     if not os.path.exists(image_path):
-        req = urllib.request.Request(url, data=None, headers=standard_headers)
-    
+        req = make_request(url)
+        
         with urllib.request.urlopen(req) as response:
             with open(image_path, 'wb') as f:
                 f.write(response.read())
@@ -86,7 +89,7 @@ def build_markdown(issue, markdown_file_name, tmp):
 
 def handle_comments(issue, tmp_dir):
     md_content = ""
-    req = urllib.request.Request(issue['comments_url'], data=None, headers=standard_headers)
+    req = make_request(issue['comments_url'])
     
     with urllib.request.urlopen(req) as response:
         comments_request = response.read()
@@ -132,12 +135,16 @@ def main():
             zip_file_path = os.path.join(os.getcwd(), 'output.zip')
         
         json_data = stdin
-    
+        
+        if not (json_data := json_data.strip()):
+            print("stdin was empty")
+            exit(2)
+        
     # reading file paths passed as arguments
     else:
         if len(sys.argv) > 3 or len(sys.argv) < 2:
             print("usage: python3 run.py <input.json> (output.zip)")
-            exit(1)
+            exit(3)
         elif len(sys.argv) == 3:
             file_path_1 = sys.argv[1]
             file_path_2 = sys.argv[2]
@@ -148,7 +155,10 @@ def main():
             elif file_path_2.lower().endswith(".json"):
                 json_file = file_path_2
                 zip_file_path = file_path_1
-            
+            else:
+                print("usage: python3 run.py <input.json> (output.zip)")
+                exit(4)
+                
             if not zip_file_path.lower().endswith(".zip"):
                 zip_file_path += ".zip"
         else:

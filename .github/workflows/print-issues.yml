@@ -1,0 +1,38 @@
+name: Issue Printer - Print Issues
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  create-issue-pdf:
+    runs-on: ubuntu-latest
+    steps:
+
+      - id: convert-to-markdown
+        name: convert the issue JSON to markdown
+        uses: UnquietCode/issue-printer/convert-issue-to-markdown@master
+        with:
+          content: "${{ toJSON(github.event['issue']) }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - id: unpack-zip
+        name: unpack the created zip file
+        run: |
+          echo '${{ steps.convert-to-markdown.outputs.zip_data }}' | base64 --decode > markdown.zip
+          unzip markdown.zip
+          echo "::set-output name=markdown_data::$(cat *.md | base64 -w0)"
+
+      - id: convert-to-pdf
+        name: convert the issue markdown to PDF
+        uses: UnquietCode/martek/actions/create-pdf@master
+        with:
+          content64: "${{ steps.unpack-zip.outputs.markdown_data }}"
+      
+      - id: commit-to-branch 
+        name: commit and push
+        uses: unquietcode/actions/add-and-commit@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          branch-name: issues
+          file-path: "issue_${{ github.event['issue']['number'] }}.pdf"
+          file-data: "${{ steps.convert-to-pdf.outputs.pdf_data }}"

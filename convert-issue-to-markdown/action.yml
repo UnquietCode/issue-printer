@@ -12,11 +12,15 @@ inputs:
   contentURL:
     description: a public URL where the issue can be retrieved
     required: false
+  github-token:
+    description: token used to query additional issue data
+    required: true
 
 runs:
   using: docker
   image: './Dockerfile'
   args:
+    - "${{ inputs.github-token }}"
     - "${{ inputs.content }}"
     - "${{ inputs.content64 }}"
     - "${{ inputs.contentURL }}"
