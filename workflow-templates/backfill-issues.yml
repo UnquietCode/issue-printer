@@ -1,20 +1,65 @@
 name: Issue Printer - Backfill Issues
 on:
-  workfloW_dispatch
+  workflow_dispatch
+
+inputs:
+
+  open:
+    description: whether to include open issues
+    required: false
+    default: true
+
+  closed:
+    description: whether to include closed issues
+    required: false
+    default: true
 
 jobs:
-  convert-issue:
+
+  fetch-issues:
     runs-on: ubuntu-latest
+    steps:
+
+      - id: get-issues
+        name: pull all issues
+        uses: github/script
+        with:
+          issue: "${{ github.event }}"
+
+      - id: write-manifest
+        name: write out the issue manifest
+        run: |
+          ISSUES=$(ls *.tex)
+          # issues = '"'x"" quote each one
+          # issues = ',' join issues
+          echo "set-output::issues::[$ISSUES]"
+   
+    outputs:
+        issues: ${{ steps.write-manifest.outputs.issues }}
+
+  convert-issues:
+    needs: fetch-issues 
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        issue: ${{ fromJson(needs.fetch-issues.outputs.issues) }}
+    
     steps:
 
       - id: convert-to-markdown
         name: convert the issue JSON to markdown
-        uses: UnquietCode/issue-printer/convert-issue-to-markdown@workflow
+        uses: UnquietCode/issue-printer/convert-issue-to-markdown@master
+>>>>>>> Stashed changes
         with:
           issue: "${{ github.event }}"
 
       - id: convert-to-pdf
         name: convert the issue markdown to PDF
+<<<<<<< Updated upstream
         uses: UnquietCode/martek/create-pdf@master
         with:
           content: "${{ steps.convert-to-markdown.outputs.markdown }}"    
+=======
+        uses: UnquietCode/martek/create-pdf@master
+>>>>>>> Stashed changes

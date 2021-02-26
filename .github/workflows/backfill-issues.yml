@@ -1,0 +1,100 @@
+name: Issue Printer - Backfill Issues
+on:
+  workflow_dispatch:
+    inputs:
+      open:
+        description: whether to include open issues
+        required: true
+        default: "true"
+      closed:
+        description: whether to include closed issues
+        required: true
+        default: "false"
+
+jobs:
+  
+  get-all-issues:
+    runs-on: ubuntu-latest
+    outputs:
+      issue_keys: ${{ toJSON(fromJSON(steps.get-issues.outputs.result).keys) }}
+      issue_data: ${{ toJSON(fromJSON(steps.get-issues.outputs.result).issues) }}
+    steps:
+      
+      - id: get-issues
+        name: get all open issues
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            let state = null;
+            
+            if (context.payload.inputs.open === "true" && context.payload.inputs.closed === "true") {
+              state = 'all';
+            } else if (context.payload.inputs.open === "true") {
+              state = 'open';
+            } else if (context.payload.inputs.closed === "true") {
+              state = 'closed';
+            } else {
+              return [];
+            }
+
+            const opts = github.issues.listForRepo.endpoint.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: state,
+            });
+            
+            const issues = await github.paginate(opts);
+            const allIssues = {};
+          
+            for (const issue of issues) {
+              if (issue.pull_request) {
+                continue;
+              }
+              allIssues[`issue #${issue.number} (${issue.state})`] = issue;
+            }
+            
+            return {
+              issues: allIssues,
+              keys: Object.keys(allIssues),
+            };
+  
+  create-issue-pdf:
+    needs: [get-all-issues]
+    
+    strategy:
+      max-parallel: 1
+      matrix:
+        issue: ${{ fromJSON(needs.get-all-issues.outputs.issue_keys) }}
+    
+    runs-on: ubuntu-latest
+    steps:
+
+      - id: convert-to-markdown
+        name: convert the issue JSON to markdown
+        uses: UnquietCode/issue-printer/convert-issue-to-markdown@master
+        with:
+          content: "${{ toJSON(fromJSON(needs.get-all-issues.outputs.issue_data)[matrix.issue]) }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - id: unpack-zip
+        name: unpack the created zip file
+        run: |
+          echo '${{ steps.convert-to-markdown.outputs.zip_data }}' | base64 --decode > markdown.zip
+          unzip markdown.zip
+          echo "::set-output name=markdown_data::$(cat *.md | base64 -w0)"
+
+      - id: convert-to-pdf
+        name: convert the issue markdown to PDF
+        uses: UnquietCode/martek/actions/create-pdf@master
+        with:
+          content64: "${{ steps.unpack-zip.outputs.markdown_data }}"
+
+      - id: commit-to-branch
+        name: commit and push
+        uses: unquietcode/actions/add-and-commit@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          branch-name: issues
+          file-path: "issue_${{ fromJSON(needs.get-all-issues.outputs.issue_data)[matrix.issue].number }}.pdf"
+          file-data: "${{ steps.convert-to-pdf.outputs.pdf_data }}"

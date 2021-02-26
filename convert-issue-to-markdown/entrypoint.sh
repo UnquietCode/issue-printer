@@ -1,5 +1,5 @@
 #!/bin/sh -l
-set -x
+set -e
 
 export GITHUB_TOKEN="$1"
 CONTENT="$2"
