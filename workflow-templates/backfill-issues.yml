@@ -12,14 +12,14 @@ on:
         default: "false"
 
 jobs:
-  
+
   get-all-issues:
     runs-on: ubuntu-latest
     outputs:
       issue_keys: ${{ toJSON(fromJSON(steps.get-issues.outputs.result).keys) }}
       issue_data: ${{ toJSON(fromJSON(steps.get-issues.outputs.result).issues) }}
     steps:
-      
+
       - id: get-issues
         name: get all open issues
         uses: actions/github-script@v3
@@ -27,7 +27,7 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             let state = null;
-            
+
             if (context.payload.inputs.open === "true" && context.payload.inputs.closed === "true") {
               state = 'all';
             } else if (context.payload.inputs.open === "true") {
@@ -43,39 +43,45 @@ jobs:
               repo: context.repo.repo,
               state: state,
             });
-            
+
             const issues = await github.paginate(opts);
             const allIssues = {};
-          
+
             for (const issue of issues) {
               if (issue.pull_request) {
                 continue;
               }
               allIssues[`issue #${issue.number} (${issue.state})`] = issue;
             }
-            
+
             return {
               issues: allIssues,
               keys: Object.keys(allIssues),
             };
-  
+
   create-issue-pdf:
     needs: [get-all-issues]
-    
+    continue-on-error: true
     strategy:
       max-parallel: 1
-      continue-on-error: true
       matrix:
         issue: ${{ fromJSON(needs.get-all-issues.outputs.issue_keys) }}
-    
+
     runs-on: ubuntu-latest
     steps:
+
+      - id: convert-to-base64
+        name: convert the issue JSON to base64
+        env:
+          ISSUE_DATA: ${{ toJSON(fromJSON(needs.get-all-issues.outputs.issue_data)[matrix.issue]) }}
+        run: |
+          echo "::set-output name=issue_data::$(echo $ISSUE_DATA | base64 -w0)"
 
       - id: convert-to-markdown
         name: convert the issue JSON to markdown
         uses: UnquietCode/issue-printer/convert-issue-to-markdown@master
         with:
-          content: "${{ toJSON(fromJSON(needs.get-all-issues.outputs.issue_data)[matrix.issue]) }}"
+          content64: "${{ steps.convert-to-base64.outputs.issue_data }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - id: unpack-zip

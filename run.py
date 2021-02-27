@@ -11,7 +11,6 @@ from tempfile import TemporaryDirectory
 
 GH_TOKEN = os.environ['GITHUB_TOKEN']
 standard_headers = {'User-Agent': 'github-issues-printer/1.0',
-                    'Accept-Encoding': 'gzip, deflate, br',
                     'Authorization': 'Bearer {0}'.format(GH_TOKEN)}
 
 def make_request(url):
@@ -37,6 +36,8 @@ def replace_image(match, tmp_dir):
     
     if not os.path.exists(image_path):
         req = make_request(url)
+        req.add_header('Accept-Encoding', 'gzip, deflate, br')
+        req.add_header('Accept', 'image/avif,image/webp,image/apng,*/*')
         
         with urllib.request.urlopen(req) as response:
             with open(image_path, 'wb') as f:
@@ -90,6 +91,7 @@ def build_markdown(issue, markdown_file_name, tmp):
 def handle_comments(issue, tmp_dir):
     md_content = ""
     req = make_request(issue['comments_url'])
+    req.add_header('Accept', 'application/json')
     
     with urllib.request.urlopen(req) as response:
         comments_request = response.read()
@@ -180,7 +182,6 @@ def main():
     markdown_file_name = os.path.splitext(zip_file_name)[0] + ".md"
     
     # render the JSON to markdown
-    json_data = json_data.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
     json_data = json.loads(json_data)
 
     with TemporaryDirectory() as tmp:
