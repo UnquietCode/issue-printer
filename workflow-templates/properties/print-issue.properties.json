@@ -1,0 +1,6 @@
+{
+    "name": "Issue Printer - Print Issue",
+    "description": "renders a single issue to PDF",
+    "iconName": "octicon smiley",
+    "categories": ["Automation", "SDLC"]
+}

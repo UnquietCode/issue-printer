@@ -9,9 +9,11 @@ import urllib.request
 from datetime import datetime
 from tempfile import TemporaryDirectory
 
-GH_TOKEN = os.environ['GITHUB_TOKEN']
-standard_headers = {'User-Agent': 'github-issues-printer/1.0',
-                    'Authorization': 'Bearer {0}'.format(GH_TOKEN)}
+standard_headers = {'User-Agent': 'github-issue-printer/1.0'}
+
+GH_TOKEN = os.environ.get('GITHUB_TOKEN', "").strip()
+if GH_TOKEN: standard_headers['Authorization'] = f'Bearer {GH_TOKEN}'
+
 
 def make_request(url):
     return urllib.request.Request(url, method='GET', headers=standard_headers)
@@ -37,7 +39,6 @@ def replace_image(match, tmp_dir):
     if not os.path.exists(image_path):
         req = make_request(url)
         req.add_header('Accept-Encoding', 'gzip, deflate, br')
-        req.add_header('Accept', 'image/avif,image/webp,image/apng,*/*')
         
         with urllib.request.urlopen(req) as response:
             with open(image_path, 'wb') as f:

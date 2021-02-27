@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 set -e
 
 export GITHUB_TOKEN="$1"

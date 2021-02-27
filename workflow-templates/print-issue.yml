@@ -1,0 +1,52 @@
+name: Issue Printer - Print Issue
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: issue number
+        required: true
+
+jobs:
+  create-issue-pdf:
+    runs-on: ubuntu-latest
+    steps:
+    
+      - id: get-issue
+        name: get the issue
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: | 
+            return await github.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.inputs.issue,
+            });
+      
+      - id: convert-to-base64
+        name: convert the issue JSON to base64
+        env:
+          ISSUE_DATA: ${{ toJSON(fromJSON(steps.get-issue.outputs.results) }}
+        run: |
+          echo "::set-output name=issue_data::$(echo $ISSUE_DATA | base64 -w0)"
+
+      - id: convert-to-markdown
+        name: convert the issue JSON to markdown
+        uses: UnquietCode/issue-printer/convert-issue-to-markdown@master
+        with:
+          content64: "${{ steps.convert-to-base64.outputs.issue_data }}"
+
+      - id: convert-to-pdf
+        name: convert the issue markdown to PDF
+        uses: UnquietCode/martek/actions/create-pdf@master
+        with:
+          zip64: "${{ steps.unpack-zip.outputs.markdown_data }}"
+
+      - id: commit-to-branch
+        name: commit and push
+        uses: unquietcode/actions/add-and-commit@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          branch-name: issues
+          file-path: "issue_${{ fromJSON(needs.get-all-issues.outputs.issue_data)[matrix.issue].number }}.pdf"
+          file-data: "${{ steps.convert-to-pdf.outputs.pdf_data }}"
