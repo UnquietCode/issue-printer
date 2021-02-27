@@ -64,6 +64,7 @@ jobs:
     
     strategy:
       max-parallel: 1
+      continue-on-error: true
       matrix:
         issue: ${{ fromJSON(needs.get-all-issues.outputs.issue_keys) }}
     

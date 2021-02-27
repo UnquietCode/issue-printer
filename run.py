@@ -180,6 +180,7 @@ def main():
     markdown_file_name = os.path.splitext(zip_file_name)[0] + ".md"
     
     # render the JSON to markdown
+    json_data = repr(json_data)[1:-1].replace('\\\\', '\\')
     json_data = json.loads(json_data)
 
     with TemporaryDirectory() as tmp:
