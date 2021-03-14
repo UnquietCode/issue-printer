@@ -17,16 +17,17 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: | 
-            return await github.issues.get({
+            const result = await github.issues.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.inputs.issue,
             });
+            return result.data;
       
       - id: convert-to-base64
         name: convert the issue JSON to base64
         env:
-          ISSUE_DATA: ${{ toJSON(fromJSON(steps.get-issue.outputs.results) }}
+          ISSUE_DATA: ${{ toJSON(fromJSON(steps.get-issue.outputs.result)) }}
         run: |
           echo "::set-output name=issue_data::$(echo $ISSUE_DATA | base64 -w0)"
 
@@ -40,7 +41,7 @@ jobs:
         name: convert the issue markdown to PDF
         uses: UnquietCode/martek/actions/create-pdf@master
         with:
-          zip64: "${{ steps.unpack-zip.outputs.markdown_data }}"
+          zip64: "${{ steps.convert-to-markdown.outputs.zip_data }}"
 
       - id: commit-to-branch
         name: commit and push
@@ -48,5 +49,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           branch-name: issues
-          file-path: "issue_${{ fromJSON(needs.get-all-issues.outputs.issue_data)[matrix.issue].number }}.pdf"
+          file-path: "issue_${{ fromJSON(steps.get-issue.outputs.result)['number'] }}.pdf"
           file-data: "${{ steps.convert-to-pdf.outputs.pdf_data }}"

@@ -15,18 +15,11 @@ jobs:
           content: "${{ toJSON(github.event['issue']) }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - id: unpack-zip
-        name: unpack the created zip file
-        run: |
-          echo '${{ steps.convert-to-markdown.outputs.zip_data }}' | base64 --decode > markdown.zip
-          unzip markdown.zip
-          echo "::set-output name=markdown_data::$(cat *.md | base64 -w0)"
-
       - id: convert-to-pdf
         name: convert the issue markdown to PDF
         uses: UnquietCode/martek/actions/create-pdf@master
         with:
-          content64: "${{ steps.unpack-zip.outputs.markdown_data }}"
+          zip64: "${{ steps.convert-to-markdown.outputs.zip_data }}"
       
       - id: commit-to-branch 
         name: commit and push
